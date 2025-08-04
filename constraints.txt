@@ -1,0 +1,6 @@
+# Constraints para resolver conflitos de dependências
+cryptography>=41.0.5,<45.0.0
+pyopenssl>=23.0.0,<25.0.0
+django>=4.2,<5.0
+pillow>=10.0.0
+setuptools>=75.8.0 
