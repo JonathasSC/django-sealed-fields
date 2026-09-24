@@ -1,4 +1,6 @@
-# django-encrypted-fields
+# django-sealed-fields
+
+> Fork de [django-encrypted-fields](https://github.com/D3NKYT0/django-encrypted-fields) (pacote PyPI `django-encrypted-fields-and-files`), de Daniel Amaral, mantido por Jonathas Cardoso com correções e melhorias.
 
 Uma biblioteca Django para criptografar e descriptografar campos em modelos (ORM), incluindo tipos de dados simples, arquivos e imagens. 
 
@@ -26,7 +28,7 @@ Para instalar a biblioteca, basta adicionar o pacote no seu projeto ou instalá-
 ### Usando `pip`:
 
 ```bash
-pip install django-encrypted-fields
+pip install django-sealed-fields
 ```
 
 ### Manualmente:
@@ -34,7 +36,7 @@ pip install django-encrypted-fields
 1. Baixe o código fonte ou clone o repositório:
    
    ```bash
-   git clone https://github.com/D3NKYT0/django-encrypted-fields
+   git clone https://github.com/JonathasSC/django-sealed-fields
    ```
 
 2. Instale os requisitos:
@@ -50,21 +52,27 @@ pip install django-encrypted-fields
    No arquivo `settings.py`, defina a chave de criptografia `ENCRYPTION_KEY`:
 
    ```python
-   ENCRYPTION_KEY = 'sua_chave_gerada_aleatoriamente_com_32_bytes'
+   ENCRYPTION_KEY = os.environ["ENCRYPTION_KEY"]  # chave Fernet
    DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 * 1024 * 1024
    SERVE_DECRYPTED_FILE_URL_BASE =  'patch/here/'
    ```
 
+   Gere uma chave Fernet válida com:
+
+   ```bash
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
+
    **Importante**: A chave de criptografia deve ser mantida em segredo. Use uma chave única para o seu projeto e não compartilhe publicamente.
 
-2. **Adicionar `django-encrypted-fields` à lista de apps instalados:**
+2. **Adicione o app `serve_files` à lista de apps instalados** (necessário apenas para servir arquivos descriptografados):
 
    No arquivo `settings.py`, adicione o app à lista `INSTALLED_APPS`:
 
    ```python
    INSTALLED_APPS = [
        # outros apps
-       'server_files',  # Seu app com os campos criptografados
+       'serve_files',
    ]
    ```
 

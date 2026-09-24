@@ -3,7 +3,6 @@ include LICENSE
 include requirements.txt
 include constraints.txt
 include pyproject.toml
-include setup.py
 
 recursive-include encrypted_fields *.py
 recursive-include serve_files *.py
