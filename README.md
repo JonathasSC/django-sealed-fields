@@ -101,6 +101,41 @@ class MeuModelo(models.Model):
 
 Os valores são criptografados automaticamente antes de serem salvos no banco de dados e descriptografados quando acessados.
 
+### Limitações
+
+- A criptografia Fernet não é determinística: o mesmo valor gera textos cifrados diferentes. Por isso, filtros por valor (`filter(campo="x")`), `unique=True` e ordenação pelo campo criptografado não funcionam.
+- Os campos `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` ainda não fazem a conversão de ida e volta corretamente e não devem ser usados até a próxima versão.
+
+### Servindo arquivos descriptografados
+
+Inclua as URLs do app `serve_files` no `urls.py` do projeto:
+
+```python
+urlpatterns = [
+    path("", include("serve_files.urls")),
+]
+```
+
+A view exige usuário autenticado (usuários anônimos são redirecionados para o `LOGIN_URL`) e, por padrão, a permissão `view` do modelo (por exemplo, `meuapp.view_meumodelo`). Apenas campos de arquivo do modelo podem ser servidos, e o objeto é buscado pelo campo `uuid`.
+
+Para usar outra regra de acesso, aponte `SERVE_DECRYPTED_FILE_PERMISSION_CHECK` para uma função que recebe o usuário, o objeto e o nome do campo:
+
+```python
+# settings.py
+SERVE_DECRYPTED_FILE_PERMISSION_CHECK = "meuapp.permissions.pode_ver_arquivo"
+
+# meuapp/permissions.py
+def pode_ver_arquivo(user, obj, field_name):
+    return obj.dono_id == user.id or user.has_perm("meuapp.view_meumodelo")
+```
+
+## Testes
+
+```bash
+pip install -e .
+python runtests.py
+```
+
 
 ## Contribuição
 
