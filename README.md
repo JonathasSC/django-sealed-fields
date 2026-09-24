@@ -95,16 +95,33 @@ class MeuModelo(models.Model):
 
 ### Funcionalidade dos campos:
 
-- **`EncryptedIntegerField`**: Campo para armazenar valores inteiros criptografados.
-- **`EncryptedFileField`**: Campo para armazenar arquivos criptografados.
-- **`EncryptedImageField`**: Campo para armazenar imagens criptografadas.
+Cada campo aceita os mesmos argumentos e faz a mesma validação do campo equivalente do Django:
+
+| Campo criptografado | Equivalente no Django |
+|---|---|
+| `EncryptedIntegerField` | `IntegerField` |
+| `EncryptedFloatField` | `FloatField` |
+| `EncryptedDecimalField` | `DecimalField` |
+| `EncryptedBooleanField` | `BooleanField` |
+| `EncryptedCharField` | `CharField` |
+| `EncryptedTextField` | `TextField` |
+| `EncryptedEmailField` | `EmailField` |
+| `EncryptedURLField` | `URLField` |
+| `EncryptedDateField` | `DateField` |
+| `EncryptedDateTimeField` | `DateTimeField` |
+| `EncryptedTimeField` | `TimeField` |
+| `EncryptedUUIDField` | `UUIDField` |
+| `EncryptedJSONField` | `JSONField` |
+| `EncryptedFileField` | `FileField` (o conteúdo do arquivo é criptografado no storage) |
+| `EncryptedImageField` | `ImageField` (o conteúdo da imagem é criptografado no storage) |
 
 Os valores são criptografados automaticamente antes de serem salvos no banco de dados e descriptografados quando acessados.
 
 ### Limitações
 
 - A criptografia Fernet não é determinística: o mesmo valor gera textos cifrados diferentes. Por isso, filtros por valor (`filter(campo="x")`), `unique=True` e ordenação pelo campo criptografado não funcionam.
-- Os campos `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` ainda não fazem a conversão de ida e volta corretamente e não devem ser usados até a próxima versão.
+- Todos os valores são gravados em colunas de texto. Datas com fuso horário são convertidas para UTC antes da criptografia.
+- Consultas por chave em `EncryptedJSONField` (`campo__chave=...`) não funcionam, pelo mesmo motivo dos filtros.
 
 ### Servindo arquivos descriptografados
 
