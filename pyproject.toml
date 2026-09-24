@@ -9,11 +9,11 @@ description = "Campos de modelo e arquivos criptografados (Fernet) para o Django
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso2004@gmail.com"},
+    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso28@gmail.com"},
     {name = "Daniel Amaral (Denky)", email = "contato@denky.dev.br"},
 ]
 maintainers = [
-    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso2004@gmail.com"},
+    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso28@gmail.com"},
 ]
 keywords = ["django", "encryption", "fields", "files", "timestamp", "cache"]
 classifiers = [
