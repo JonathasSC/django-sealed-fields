@@ -3,16 +3,17 @@ requires = ["setuptools>=75.8.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django-encrypted-fields-and-files"
-version = "0.1.12"
-description = "Campos e storages criptografados para o Django com suporte a timestamp para evitar cache."
+name = "django-sealed-fields"
+version = "0.1.0"
+description = "Campos de modelo e arquivos criptografados (Fernet) para o Django. Fork de django-encrypted-fields-and-files."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Denky", email = "contato@denky.dev.br"}
+    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso2004@gmail.com"},
+    {name = "Daniel Amaral (Denky)", email = "contato@denky.dev.br"},
 ]
 maintainers = [
-    {name = "Denky", email = "contato@denky.dev.br"}
+    {name = "Jonathas Cardoso", email = "jonathas.s.cardoso2004@gmail.com"},
 ]
 keywords = ["django", "encryption", "fields", "files", "timestamp", "cache"]
 classifiers = [
@@ -32,10 +33,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://denky.dev.br/django-encrypted-fields"
-Documentation = "https://github.com/D3NKYT0/django-encrypted-fields/wiki"
-Repository = "https://github.com/D3NKYT0/django-encrypted-fields"
-"Issue Tracker" = "https://github.com/D3NKYT0/django-encrypted-fields/issues"
+Homepage = "https://github.com/JonathasSC/django-sealed-fields"
+Repository = "https://github.com/JonathasSC/django-sealed-fields"
+"Issue Tracker" = "https://github.com/JonathasSC/django-sealed-fields/issues"
+"Upstream" = "https://github.com/D3NKYT0/django-encrypted-fields"
 
 [tool.setuptools.packages.find]
 include = ["encrypted_fields*", "serve_files*"]

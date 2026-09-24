@@ -46,7 +46,7 @@ twine upload --repository testpypi dist/*
 
 ### 6. Testar instalação do TestPyPI
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ django-encrypted-fields-and-files
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ django-sealed-fields
 ```
 
 ### 7. Upload para PyPI (produção)
@@ -88,8 +88,8 @@ export TWINE_PASSWORD=pypi-TOKEN_AQUI
 
 ## Verificação Pós-Upload
 
-1. **TestPyPI**: https://test.pypi.org/project/django-encrypted-fields-and-files/
-2. **PyPI**: https://pypi.org/project/django-encrypted-fields-and-files/
+1. **TestPyPI**: https://test.pypi.org/project/django-sealed-fields/
+2. **PyPI**: https://pypi.org/project/django-sealed-fields/
 
 ## Comandos Rápidos (Windows PowerShell)
 
@@ -115,10 +115,10 @@ twine upload dist/*
 - Use `__token__` como username e `pypi-TOKEN_AQUI` como password
 
 ### Erro de versão já existente
-- Incremente a versão no `setup.py` e `pyproject.toml`
+- Incremente a versão no `pyproject.toml`
 
 ### Erro de dependências
-- Verifique se todas as dependências estão listadas em `install_requires`
+- Verifique se todas as dependências estão listadas em `dependencies` no `pyproject.toml`
 
 ### Erro de arquivos faltando
 - Verifique se o `MANIFEST.in` está correto
