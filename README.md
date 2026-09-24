@@ -1,5 +1,7 @@
 # django-sealed-fields
 
+[![CI](https://github.com/JonathasSC/django-sealed-fields/actions/workflows/ci.yml/badge.svg)](https://github.com/JonathasSC/django-sealed-fields/actions/workflows/ci.yml)
+
 > Fork de [django-encrypted-fields](https://github.com/D3NKYT0/django-encrypted-fields) (pacote PyPI `django-encrypted-fields-and-files`), de Daniel Amaral, mantido por Jonathas Cardoso com correções e melhorias.
 
 Uma biblioteca Django para criptografar e descriptografar campos em modelos (ORM), incluindo tipos de dados simples, arquivos e imagens. 

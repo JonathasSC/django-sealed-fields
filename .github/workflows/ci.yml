@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Django ${{ matrix.django }} / Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Apenas combinações suportadas oficialmente por cada versão do Django
+          - { django: "4.2", python: "3.10" }
+          - { django: "4.2", python: "3.12" }
+          - { django: "5.2", python: "3.10" }
+          - { django: "5.2", python: "3.13" }
+          - { django: "6.0", python: "3.12" }
+          - { django: "6.0", python: "3.14" }
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . "Django~=${{ matrix.django }}.0"
+
+      - name: Versões instaladas
+        run: python -m pip list | grep -iE "^(django|cryptography|pillow) "
+
+      - name: Gerar migrações (dry-run)
+        run: python -m django makemigrations tests --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: tests.settings
+
+      - name: Rodar testes
+        run: python -W error::DeprecationWarning runtests.py
+
+  build:
+    name: Build do pacote
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Construir sdist e wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+
+      - name: Validar metadados
+        run: python -m twine check --strict dist/*
+
+      - name: Conferir conteúdo do wheel
+        run: |
+          python - <<'EOF'
+          import glob, sys, zipfile
+
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          unexpected = [n for n in names if n.startswith("tests/") or "__pycache__" in n]
+          if unexpected:
+              sys.exit(f"Arquivos inesperados no wheel: {unexpected}")
+          for package in ("encrypted_fields/__init__.py", "serve_files/__init__.py"):
+              if package not in names:
+                  sys.exit(f"Arquivo ausente no wheel: {package}")
+          print("\n".join(names))
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
