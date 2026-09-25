@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import *
+from .views import serve_decrypted_file
 from django.conf import settings
 
-app_name = 'serve_files'
+app_name = 'sealed_fields'
 
 # Garantir que a variável SERVE_DECRYPTED_FILE_URL_BASE esteja no settings
 if not hasattr(settings, 'SERVE_DECRYPTED_FILE_URL_BASE'):

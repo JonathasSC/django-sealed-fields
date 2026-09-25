@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from PIL import Image
 
-from .encrypted_file_mixin import EncryptedFileMixin
+from .file_mixin import EncryptedFileMixin
 
 __all__ = ["EncryptedFileField", "EncryptedImageField"]
 

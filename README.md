@@ -56,7 +56,7 @@ pip install django-sealed-fields
    ```python
    ENCRYPTION_KEY = os.environ["ENCRYPTION_KEY"]  # chave Fernet
    DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 * 1024 * 1024
-   SERVE_DECRYPTED_FILE_URL_BASE =  'patch/here/'
+   SERVE_DECRYPTED_FILE_URL_BASE = 'arquivos/'  # prefixo das URLs que servem arquivos
    ```
 
    Gere uma chave Fernet válida com:
@@ -67,14 +67,14 @@ pip install django-sealed-fields
 
    **Importante**: A chave de criptografia deve ser mantida em segredo. Use uma chave única para o seu projeto e não compartilhe publicamente.
 
-2. **Adicione o app `serve_files` à lista de apps instalados** (necessário apenas para servir arquivos descriptografados):
+2. **Adicione o app `sealed_fields.serve` à lista de apps instalados** (necessário apenas para servir arquivos descriptografados):
 
    No arquivo `settings.py`, adicione o app à lista `INSTALLED_APPS`:
 
    ```python
    INSTALLED_APPS = [
        # outros apps
-       'serve_files',
+       'sealed_fields.serve',
    ]
    ```
 
@@ -86,8 +86,7 @@ Agora, você pode usar os campos criptografados em seus modelos Django da seguin
 
 ```python
 from django.db import models
-from encrypted_fields.encrypted_fields import *
-from encrypted_fields.encrypted_files import *
+from sealed_fields import EncryptedFileField, EncryptedImageField, EncryptedIntegerField
 
 class MeuModelo(models.Model):
     campo_inteiro = EncryptedIntegerField()
@@ -127,11 +126,11 @@ Os valores são criptografados automaticamente antes de serem salvos no banco de
 
 ### Servindo arquivos descriptografados
 
-Inclua as URLs do app `serve_files` no `urls.py` do projeto:
+Inclua as URLs do app `sealed_fields.serve` no `urls.py` do projeto:
 
 ```python
 urlpatterns = [
-    path("", include("serve_files.urls")),
+    path("", include("sealed_fields.serve.urls")),
 ]
 ```
 
@@ -147,6 +146,50 @@ SERVE_DECRYPTED_FILE_PERMISSION_CHECK = "meuapp.permissions.pode_ver_arquivo"
 def pode_ver_arquivo(user, obj, field_name):
     return obj.dono_id == user.id or user.has_perm("meuapp.view_meumodelo")
 ```
+
+Para gerar a URL de um arquivo em views ou templates:
+
+```python
+from sealed_fields.serve.views import get_file_url, get_file_url_with_timestamp
+
+url = get_file_url("meuapp", "MeuModelo", "campo_imagem", obj.uuid)
+# Com timestamp na URL, para evitar cache do navegador após atualizar o arquivo
+url = get_file_url_with_timestamp("meuapp", "MeuModelo", "campo_imagem", obj.uuid)
+```
+
+```django
+<img src="{% url 'sealed_fields:serve_decrypted_file' app_name='meuapp' model_name='MeuModelo' field_name='campo_imagem' uuid=obj.uuid %}">
+```
+
+## Migrando do `django-encrypted-fields-and-files`
+
+Os dados já gravados continuam compatíveis (mesma chave `ENCRYPTION_KEY` e mesmo formato), mas os nomes de import mudaram:
+
+| Antes | Agora |
+|---|---|
+| `pip install django-encrypted-fields-and-files` | `pip install django-sealed-fields` |
+| `from encrypted_fields.encrypted_fields import ...` | `from sealed_fields import ...` |
+| `from encrypted_fields.encrypted_files import ...` | `from sealed_fields import ...` |
+| `INSTALLED_APPS = [..., "serve_files"]` | `INSTALLED_APPS = [..., "sealed_fields.serve"]` |
+| `include("serve_files.urls")` | `include("sealed_fields.serve.urls")` |
+| `{% url 'serve_files:...' %}` / `reverse("serve_files:...")` | `{% url 'sealed_fields:...' %}` / `reverse("sealed_fields:...")` |
+| `from serve_files.views import get_file_url` | `from sealed_fields.serve.views import get_file_url` |
+
+As migrações já existentes no seu projeto importam os campos pelo caminho antigo. Atualize-as com:
+
+```bash
+grep -rl "encrypted_fields" --include="*.py" */migrations/ | xargs sed -i \
+  -e "s/encrypted_fields\.encrypted_fields/sealed_fields.fields/g" \
+  -e "s/encrypted_fields\.encrypted_files/sealed_fields.files/g" \
+  -e "s/^import encrypted_fields$/import sealed_fields/"
+```
+
+Depois, rode `python manage.py makemigrations --check` para confirmar que nenhuma migração nova é necessária.
+
+Mudanças de comportamento em relação à versão original:
+
+- A view de arquivos exige login e permissão (veja [Servindo arquivos descriptografados](#servindo-arquivos-descriptografados)).
+- `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` passaram a funcionar. Valores de `EncryptedUUIDField` gravados pela versão original ficaram em texto puro e não podem ser lidos.
 
 ## Testes
 
