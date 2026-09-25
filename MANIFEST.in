@@ -6,8 +6,7 @@ include pyproject.toml
 include runtests.py
 recursive-include tests *.py
 
-recursive-include encrypted_fields *.py
-recursive-include serve_files *.py
+recursive-include sealed_fields *.py
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co] 

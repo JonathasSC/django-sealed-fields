@@ -39,7 +39,7 @@ Repository = "https://github.com/JonathasSC/django-sealed-fields"
 "Upstream" = "https://github.com/D3NKYT0/django-encrypted-fields"
 
 [tool.setuptools.packages.find]
-include = ["encrypted_fields*", "serve_files*"]
+include = ["sealed_fields*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt"]

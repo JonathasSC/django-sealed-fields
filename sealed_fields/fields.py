@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.db import models
-from .encrypted_field_mixin import EncryptedFieldMixin
+from .field_mixin import EncryptedFieldMixin
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.functional import cached_property
 from django.db.backends.base.operations import BaseDatabaseOperations

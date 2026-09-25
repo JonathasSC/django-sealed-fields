@@ -121,14 +121,14 @@ class EncryptedFileFieldTests(MediaRootMixin, TestCase):
     def test_missing_file_does_not_break_queries(self):
         obj = Document.objects.create(file=ContentFile(b"x", name="a.txt"))
         default_storage.delete("docs/a.txt")
-        with self.assertLogs("encrypted_fields.encrypted_files", "WARNING"):
+        with self.assertLogs("sealed_fields.files", "WARNING"):
             documents = list(Document.objects.all())
         self.assertEqual(documents[0].file.name, "docs/a.txt")
 
     def test_deferred_field_is_not_read_from_storage(self):
         Document.objects.create(file=ContentFile(b"x", name="a.txt"))
         default_storage.delete("docs/a.txt")
-        with self.assertNoLogs("encrypted_fields.encrypted_files", "WARNING"):
+        with self.assertNoLogs("sealed_fields.files", "WARNING"):
             list(Document.objects.defer("file"))
 
 

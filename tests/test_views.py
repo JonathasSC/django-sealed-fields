@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.test import TestCase, override_settings
 
-from serve_files.views import get_file_url, get_file_url_with_timestamp
+from sealed_fields.serve.views import get_file_url, get_file_url_with_timestamp
 
 from .models import Document
 from .test_files import MediaRootMixin, png_bytes
@@ -100,7 +100,7 @@ class ServeDecryptedFileTests(MediaRootMixin, TestCase):
     def test_response_is_cached(self):
         self.client.force_login(self.viewer)
         self.client.get(self.url())
-        with mock.patch("encrypted_fields.encrypted_files.EncryptedFileFieldMixin.from_db_value") as from_db:
+        with mock.patch("sealed_fields.files.EncryptedFileFieldMixin.from_db_value") as from_db:
             from_db.side_effect = AssertionError("não deveria descriptografar de novo")
             response = self.client.get(self.url())
         self.assertEqual(response.content, b"conteudo secreto")
@@ -149,8 +149,8 @@ class ServeDecryptedFileTests(MediaRootMixin, TestCase):
 
     def test_internal_error_does_not_leak_details(self):
         self.client.force_login(self.viewer)
-        with mock.patch("serve_files.views.guess_type", side_effect=RuntimeError("detalhe interno")):
-            with self.assertLogs("serve_files.views", "ERROR"):
+        with mock.patch("sealed_fields.serve.views.guess_type", side_effect=RuntimeError("detalhe interno")):
+            with self.assertLogs("sealed_fields.serve.views", "ERROR"):
                 response = self.client.get(self.url())
         self.assertEqual(response.status_code, 500)
         self.assertNotIn(b"detalhe interno", response.content)

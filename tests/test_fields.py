@@ -200,7 +200,7 @@ class LegacyDataTests(TestCase):
 class PublicApiTests(unittest.TestCase):
     def test_star_import_does_not_leak_internal_names(self):
         namespace = {}
-        exec("import datetime\nfrom encrypted_fields import *", namespace)
+        exec("import datetime\nfrom sealed_fields import *", namespace)
         self.assertIs(namespace["datetime"], datetime)
         self.assertIn("EncryptedCharField", namespace)
         self.assertIn("EncryptedImageField", namespace)

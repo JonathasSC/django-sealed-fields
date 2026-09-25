@@ -81,7 +81,7 @@ jobs:
           unexpected = [n for n in names if n.startswith("tests/") or "__pycache__" in n]
           if unexpected:
               sys.exit(f"Arquivos inesperados no wheel: {unexpected}")
-          for package in ("encrypted_fields/__init__.py", "serve_files/__init__.py"):
+          for package in ("sealed_fields/__init__.py", "sealed_fields/serve/__init__.py"):
               if package not in names:
                   sys.exit(f"Arquivo ausente no wheel: {package}")
           print("\n".join(names))

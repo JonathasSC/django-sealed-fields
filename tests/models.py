@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from encrypted_fields import (
+from sealed_fields import (
     EncryptedBooleanField,
     EncryptedCharField,
     EncryptedDateField,

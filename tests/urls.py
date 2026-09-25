@@ -1,5 +1,5 @@
 from django.urls import include, path
 
 urlpatterns = [
-    path("", include("serve_files.urls")),
+    path("", include("sealed_fields.serve.urls")),
 ]
