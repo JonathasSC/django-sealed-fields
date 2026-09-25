@@ -1,5 +1,4 @@
-from cryptography.fernet import Fernet
-from django.conf import settings
+from .crypto import get_cipher
 
 
 class EncryptedFieldMixin:
@@ -11,11 +10,9 @@ class EncryptedFieldMixin:
     coluna de texto. Na leitura, o texto descriptografado é convertido de volta por
     `cast_value`, que por padrão usa o to_python do campo original.
     """
-    def __init__(self, *args, **kwargs):
-        if not hasattr(settings, 'ENCRYPTION_KEY'):
-            raise ValueError("ENCRYPTION_KEY must be set in your environment.")
-        self.cipher = Fernet(settings.ENCRYPTION_KEY)
-        super().__init__(*args, **kwargs)
+    @property
+    def cipher(self):
+        return get_cipher()
 
     def get_db_prep_value(self, value, connection, prepared=False):
         """

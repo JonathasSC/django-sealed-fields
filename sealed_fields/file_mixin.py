@@ -1,13 +1,12 @@
-from cryptography.fernet import Fernet, InvalidToken
-from django.conf import settings
+from cryptography.fernet import InvalidToken
+
+from .crypto import get_cipher
 
 
 class EncryptedFileMixin:
-
-    def __init__(self):
-        if not hasattr(settings, 'ENCRYPTION_KEY'):
-            raise ValueError("ENCRYPTION_KEY must be set in your environment.")
-        self.cipher = Fernet(settings.ENCRYPTION_KEY)
+    @property
+    def cipher(self):
+        return get_cipher()
 
     def encrypted(self, content):
         """
