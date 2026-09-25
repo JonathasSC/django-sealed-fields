@@ -1,9 +1,9 @@
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 
 
 class EncryptedFileMixin:
-    
+
     def __init__(self):
         if not hasattr(settings, 'ENCRYPTION_KEY'):
             raise ValueError("ENCRYPTION_KEY must be set in your environment.")
@@ -19,15 +19,15 @@ class EncryptedFileMixin:
 
         elif not isinstance(content, bytes):
             raise ValueError("O conteúdo precisa ser uma string ou bytes para criptografia.")
-        
+
         return self.cipher.encrypt(content)
 
     def decrypted(self, content):
         """
         Descriptografa o conteúdo.
         """
-        
+
         try:
             return self.cipher.decrypt(content)
-        except Exception as e:
-            raise ValueError(f"Erro ao descriptografar: {str(e)}")  # Exceção mais clara
+        except InvalidToken as e:
+            raise ValueError("Erro ao descriptografar: chave incorreta ou conteúdo corrompido.") from e

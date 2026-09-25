@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from .models import AllFields
 
+
 class RoundTripMixin:
     def assertRoundTrip(self, field_name, value):
         obj = AllFields.objects.create(**{field_name: value})

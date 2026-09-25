@@ -149,8 +149,10 @@ class ServeDecryptedFileTests(MediaRootMixin, TestCase):
 
     def test_internal_error_does_not_leak_details(self):
         self.client.force_login(self.viewer)
-        with mock.patch("sealed_fields.serve.views.guess_type", side_effect=RuntimeError("detalhe interno")):
-            with self.assertLogs("sealed_fields.serve.views", "ERROR"):
-                response = self.client.get(self.url())
+        with (
+            mock.patch("sealed_fields.serve.views.guess_type", side_effect=RuntimeError("detalhe interno")),
+            self.assertLogs("sealed_fields.serve.views", "ERROR"),
+        ):
+            response = self.client.get(self.url())
         self.assertEqual(response.status_code, 500)
         self.assertNotIn(b"detalhe interno", response.content)

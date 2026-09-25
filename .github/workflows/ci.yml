@@ -14,6 +14,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+
+      - name: Conferir se o uv.lock está atualizado
+        run: uv lock --check
+
+      - name: Ruff
+        run: uv run ruff check --output-format=github .
+
   tests:
     name: Django ${{ matrix.django }} / Python ${{ matrix.python }}
     runs-on: ubuntu-latest
@@ -28,53 +44,50 @@ jobs:
           - { django: "5.2", python: "3.13" }
           - { django: "6.0", python: "3.12" }
           - { django: "6.0", python: "3.14" }
+          - { django: "6.1", python: "3.12" }
+          - { django: "6.1", python: "3.14" }
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: ${{ matrix.python }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
+          enable-cache: true
 
       - name: Instalar dependências
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e . "Django~=${{ matrix.django }}.0"
+          uv sync --locked
+          uv pip install "django~=${{ matrix.django }}.0"
 
       - name: Versões instaladas
-        run: python -m pip list | grep -iE "^(django|cryptography|pillow) "
+        run: uv pip list | grep -iE "^(django|cryptography|pillow) "
 
       - name: Gerar migrações (dry-run)
-        run: python -m django makemigrations tests --dry-run
+        run: uv run --no-sync python -m django makemigrations tests --dry-run
         env:
           DJANGO_SETTINGS_MODULE: tests.settings
 
       - name: Rodar testes
-        run: python -W error::DeprecationWarning runtests.py
+        run: uv run --no-sync python -W error::DeprecationWarning runtests.py
 
   build:
     name: Build do pacote
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v10.2.0
 
       - name: Construir sdist e wheel
-        run: |
-          python -m pip install --upgrade pip build twine
-          python -m build
+        run: uv build
 
       - name: Validar metadados
-        run: python -m twine check --strict dist/*
+        run: uvx twine check --strict dist/*
 
       - name: Conferir conteúdo do wheel
         run: |
-          python - <<'EOF'
+          uv run --no-project python - <<'EOF'
           import glob, sys, zipfile
 
           names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
@@ -87,7 +100,7 @@ jobs:
           print("\n".join(names))
           EOF
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/

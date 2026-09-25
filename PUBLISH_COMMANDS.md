@@ -2,124 +2,84 @@
 
 ## Pré-requisitos
 
-1. **Conta no PyPI**: https://pypi.org/account/register/
-2. **Conta no TestPyPI**: https://test.pypi.org/account/register/
-3. **API Token**: Configure um token de API em ambas as contas
+1. **uv**: https://docs.astral.sh/uv/getting-started/installation/
+2. **Conta no PyPI**: https://pypi.org/account/register/
+3. **Conta no TestPyPI**: https://test.pypi.org/account/register/
+4. **API Token**: Configure um token de API em ambas as contas
 
 ## Opção 1: Usando o Script Automatizado
 
 ```bash
-# Executar o script de publicação
-python publish.py
+uv run --no-project python publish.py
 ```
 
 ## Opção 2: Comandos Manuais
 
-### 1. Instalar dependências de build
+### 1. Limpar builds anteriores
 ```bash
-pip install build twine
-```
-
-### 2. Limpar builds anteriores
-```bash
-# Windows
-rmdir /s /q build dist *.egg-info 2>nul
-
 # Linux/Mac
 rm -rf build/ dist/ *.egg-info/
+
+# Windows (PowerShell)
+Remove-Item -Recurse -Force build, dist, *.egg-info -ErrorAction SilentlyContinue
 ```
 
-### 3. Construir o pacote
+### 2. Construir o pacote
 ```bash
-python -m build
+uv build
 ```
 
-### 4. Verificar o pacote
+### 3. Verificar o pacote
 ```bash
-twine check dist/*
+uvx twine check --strict dist/*
 ```
 
-### 5. Upload para TestPyPI (recomendado primeiro)
+### 4. Upload para TestPyPI (recomendado primeiro)
 ```bash
-twine upload --repository testpypi dist/*
+uv publish --publish-url https://test.pypi.org/legacy/ --token pypi-TOKEN_DO_TESTPYPI
 ```
 
-### 6. Testar instalação do TestPyPI
+### 5. Testar instalação do TestPyPI
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ django-sealed-fields
+uv pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ django-sealed-fields
 ```
 
-### 7. Upload para PyPI (produção)
+### 6. Upload para PyPI (produção)
 ```bash
-twine upload dist/*
+uv publish --token pypi-TOKEN_DO_PYPI
 ```
 
 ## Configuração de Credenciais
 
-### Opção A: Arquivo .pypirc
-Crie um arquivo `~/.pypirc` (Linux/Mac) ou `%USERPROFILE%\.pypirc` (Windows):
+Em vez de passar `--token` na linha de comando, defina a variável de ambiente `UV_PUBLISH_TOKEN`:
 
-```ini
-[distutils]
-index-servers =
-    pypi
-    testpypi
-
-[pypi]
-username = __token__
-password = pypi-TOKEN_AQUI
-
-[testpypi]
-repository = https://test.pypi.org/legacy/
-username = __token__
-password = pypi-TOKEN_AQUI
-```
-
-### Opção B: Variáveis de Ambiente
 ```bash
-# Windows
-set TWINE_USERNAME=__token__
-set TWINE_PASSWORD=pypi-TOKEN_AQUI
-
 # Linux/Mac
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=pypi-TOKEN_AQUI
+export UV_PUBLISH_TOKEN=pypi-TOKEN_AQUI
+
+# Windows (PowerShell)
+$env:UV_PUBLISH_TOKEN = "pypi-TOKEN_AQUI"
 ```
+
+Lembre-se de que o PyPI e o TestPyPI usam tokens diferentes.
 
 ## Verificação Pós-Upload
 
 1. **TestPyPI**: https://test.pypi.org/project/django-sealed-fields/
 2. **PyPI**: https://pypi.org/project/django-sealed-fields/
 
-## Comandos Rápidos (Windows PowerShell)
-
-```powershell
-# Limpar e construir
-Remove-Item -Recurse -Force build, dist, *.egg-info -ErrorAction SilentlyContinue
-python -m build
-
-# Verificar
-twine check dist/*
-
-# Upload para TestPyPI
-twine upload --repository testpypi dist/*
-
-# Upload para PyPI
-twine upload dist/*
-```
-
 ## Troubleshooting
 
 ### Erro de autenticação
-- Verifique se o token está correto
-- Use `__token__` como username e `pypi-TOKEN_AQUI` como password
+- Verifique se o token é da conta certa (PyPI ou TestPyPI)
+- Confira se `UV_PUBLISH_TOKEN` não contém um token antigo
 
 ### Erro de versão já existente
 - Incremente a versão no `pyproject.toml`
 
 ### Erro de dependências
 - Verifique se todas as dependências estão listadas em `dependencies` no `pyproject.toml`
+- Rode `uv lock` depois de alterar as dependências
 
 ### Erro de arquivos faltando
 - Verifique se o `MANIFEST.in` está correto
-- Execute `python setup.py sdist` para verificar arquivos incluídos 

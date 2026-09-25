@@ -18,7 +18,17 @@ maintainers = [
 keywords = ["django", "encryption", "fields", "files", "timestamp", "cache"]
 classifiers = [
     "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: MIT License",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -28,7 +38,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "Django>=4.2",
-    "cryptography>=41.0.5,<45.0.0",
+    "cryptography>=41.0.5",
     "pillow>=10.0.0",
 ]
 
@@ -38,8 +48,40 @@ Repository = "https://github.com/JonathasSC/django-sealed-fields"
 "Issue Tracker" = "https://github.com/JonathasSC/django-sealed-fields/issues"
 "Upstream" = "https://github.com/D3NKYT0/django-encrypted-fields"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.16",
+]
+
 [tool.setuptools.packages.find]
 include = ["sealed_fields*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.md", "*.txt"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "W",    # pycodestyle (avisos)
+    "F",    # pyflakes
+    "I",    # ordenação de imports
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "DJ",   # flake8-django
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "RUF",  # regras do próprio Ruff
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Reexporta a API pública dos submódulos
+"sealed_fields/__init__.py" = ["F403"]
+# Models usados só nos testes não precisam de __str__
+"tests/*" = ["DJ008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sealed_fields", "tests"]
