@@ -22,9 +22,7 @@ class RoundTripMixin:
 
     def raw_value(self, obj, field_name):
         with connection.cursor() as cursor:
-            cursor.execute(
-                f"SELECT {field_name} FROM {AllFields._meta.db_table} WHERE id = %s", [obj.pk]
-            )
+            cursor.execute(f"SELECT {field_name} FROM {AllFields._meta.db_table} WHERE id = %s", [obj.pk])
             return cursor.fetchone()[0]
 
 

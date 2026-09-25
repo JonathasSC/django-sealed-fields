@@ -29,24 +29,18 @@ class EncryptedIntegerField(EncryptedFieldMixin, models.IntegerField):
     """
     Campo criptografado para valores inteiros.
     """
+
     @cached_property
     def validators(self) -> list[MinValueValidator | MaxValueValidator]:
         # These validators can't be added at field initialization time since
         # they're based on values retrieved from `connection`.
         validators_ = [*self.default_validators, *self._validators]
         internal_type = models.IntegerField().get_internal_type()
-        min_value, max_value = BaseDatabaseOperations.integer_field_ranges[
-            internal_type
-        ]
+        min_value, max_value = BaseDatabaseOperations.integer_field_ranges[internal_type]
         if min_value is not None and not any(
             (
                 isinstance(validator, MinValueValidator)
-                and (
-                    validator.limit_value()
-                    if callable(validator.limit_value)
-                    else validator.limit_value
-                )
-                >= min_value
+                and (validator.limit_value() if callable(validator.limit_value) else validator.limit_value) >= min_value
             )
             for validator in validators_
         ):
@@ -54,12 +48,7 @@ class EncryptedIntegerField(EncryptedFieldMixin, models.IntegerField):
         if max_value is not None and not any(
             (
                 isinstance(validator, MaxValueValidator)
-                and (
-                    validator.limit_value()
-                    if callable(validator.limit_value)
-                    else validator.limit_value
-                )
-                <= max_value
+                and (validator.limit_value() if callable(validator.limit_value) else validator.limit_value) <= max_value
             )
             for validator in validators_
         ):
@@ -101,6 +90,7 @@ class EncryptedDateTimeField(EncryptedFieldMixin, models.DateTimeField):
     """
     Campo criptografado para valores de data e hora.
     """
+
     def serialize_value(self, value):
         # Valores com fuso horário são gravados em UTC, como o Django faz nas colunas nativas
         if value.tzinfo is not None:
@@ -142,6 +132,7 @@ class EncryptedJSONField(EncryptedFieldMixin, models.JSONField):
     """
     Campo criptografado para valores JSON.
     """
+
     def serialize_value(self, value):
         return json.dumps(value, cls=self.encoder)
 

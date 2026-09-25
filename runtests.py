@@ -2,6 +2,7 @@
 """
 Executa a suíte de testes: python runtests.py [rótulos de teste...]
 """
+
 import os
 import sys
 

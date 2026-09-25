@@ -39,7 +39,7 @@ pip install django-sealed-fields
    ```python
    ENCRYPTION_KEY = os.environ["ENCRYPTION_KEY"]  # chave Fernet
    DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 * 1024 * 1024
-   SERVE_DECRYPTED_FILE_URL_BASE = 'arquivos/'  # prefixo das URLs que servem arquivos
+   SERVE_DECRYPTED_FILE_URL_BASE = "arquivos/"  # prefixo das URLs que servem arquivos
    ```
 
    Gere uma chave Fernet válida com:
@@ -55,8 +55,8 @@ pip install django-sealed-fields
    ```python
    INSTALLED_APPS = [
        # outros apps
-       'sealed_fields',        # comando rotate_encryption_key
-       'sealed_fields.serve',  # view que serve arquivos descriptografados
+       "sealed_fields",  # comando rotate_encryption_key
+       "sealed_fields.serve",  # view que serve arquivos descriptografados
    ]
    ```
 
@@ -72,10 +72,11 @@ Agora, você pode usar os campos criptografados em seus modelos Django da seguin
 from django.db import models
 from sealed_fields import EncryptedFileField, EncryptedImageField, EncryptedIntegerField
 
+
 class MeuModelo(models.Model):
     campo_inteiro = EncryptedIntegerField()
-    campo_arquivo = EncryptedFileField(upload_to='arquivos/')
-    campo_imagem = EncryptedImageField(upload_to='imagens/')
+    campo_arquivo = EncryptedFileField(upload_to="arquivos/")
+    campo_imagem = EncryptedImageField(upload_to="imagens/")
 ```
 
 ### Funcionalidade dos campos:
@@ -132,6 +133,7 @@ Para usar outra regra de acesso, aponte `SERVE_DECRYPTED_FILE_PERMISSION_CHECK` 
 ```python
 # settings.py
 SERVE_DECRYPTED_FILE_PERMISSION_CHECK = "meuapp.permissions.pode_ver_arquivo"
+
 
 # meuapp/permissions.py
 def pode_ver_arquivo(user, obj, field_name):
@@ -222,6 +224,7 @@ uv sync                           # cria o .venv com o pacote e as dependências
 uv run python runtests.py         # testes
 uv run ruff check .               # lint
 uv run ruff check --fix .         # corrige automaticamente o que for possível
+uv run ruff format .              # formata o código
 ```
 
 Para testar com outra versão do Django ou do Python:
@@ -240,7 +243,7 @@ Sinta-se à vontade para contribuir! Para sugestões ou melhorias, siga os segui
 
 1. Faça um fork deste repositório.
 2. Crie uma branch (`git checkout -b feature-nome-da-sua-feature`).
-3. Garanta que `uv run python runtests.py` e `uv run ruff check .` passam.
+3. Garanta que `uv run python runtests.py`, `uv run ruff check .` e `uv run ruff format --check .` passam.
 4. Comite suas mudanças e envie a branch para o seu fork.
 5. Abra um Pull Request. O CI roda o lint, os testes em todas as versões suportadas do Django e o build do pacote.
 

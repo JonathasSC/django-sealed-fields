@@ -22,17 +22,19 @@ def run_command(command, description):
         print(f"Comando: {command}")
         return False
 
+
 def clean_build():
     """Remove diretórios de build anteriores."""
-    dirs_to_clean = ['build', 'dist', '*.egg-info']
+    dirs_to_clean = ["build", "dist", "*.egg-info"]
     for pattern in dirs_to_clean:
-        for path in Path('.').glob(pattern):
+        for path in Path(".").glob(pattern):
             if path.is_dir():
                 print(f"🧹 Removendo {path}")
                 shutil.rmtree(path)
             elif path.is_file():
                 print(f"🧹 Removendo {path}")
                 path.unlink()
+
 
 def check_dependencies():
     """Verifica se o uv está instalado."""
@@ -41,13 +43,16 @@ def check_dependencies():
         return False
     return True
 
+
 def build_package():
     """Constrói o pacote."""
     return run_command("uv build", "Construir pacote")
 
+
 def check_package():
     """Verifica o pacote construído."""
     return run_command("uvx twine check --strict dist/*", "Verificar pacote")
+
 
 def upload_to_testpypi():
     """Faz upload para TestPyPI."""
@@ -55,11 +60,13 @@ def upload_to_testpypi():
     print("⚠️  Use o token do TestPyPI (UV_PUBLISH_TOKEN ou digite quando solicitado).")
     return run_command("uv publish --publish-url https://test.pypi.org/legacy/", "Upload para TestPyPI")
 
+
 def upload_to_pypi():
     """Faz upload para PyPI."""
     print("\n🚀 Fazendo upload para PyPI...")
     print("⚠️  Use o token do PyPI (UV_PUBLISH_TOKEN ou digite quando solicitado).")
     return run_command("uv publish", "Upload para PyPI")
+
 
 def main():
     """Função principal."""
@@ -95,7 +102,7 @@ def main():
         upload_to_pypi()
     elif choice == "3":
         upload_to_testpypi()
-        if input("\nContinuar para PyPI? (y/n): ").lower() == 'y':
+        if input("\nContinuar para PyPI? (y/n): ").lower() == "y":
             upload_to_pypi()
     elif choice == "4":
         print("✅ Pacote construído com sucesso! Arquivos em ./dist/")
@@ -104,6 +111,7 @@ def main():
         sys.exit(1)
 
     print("\n🎉 Processo concluído!")
+
 
 if __name__ == "__main__":
     main()

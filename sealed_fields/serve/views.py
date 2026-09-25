@@ -120,13 +120,16 @@ def get_file_url_with_timestamp(app_name, model_name, field_name, uuid, timestam
     if timestamp is None:
         timestamp = int(time.time())
 
-    return reverse('sealed_fields:serve_decrypted_file_with_timestamp', kwargs={
-        'app_name': app_name,
-        'model_name': model_name,
-        'field_name': field_name,
-        'uuid': uuid,
-        'timestamp': timestamp
-    })
+    return reverse(
+        "sealed_fields:serve_decrypted_file_with_timestamp",
+        kwargs={
+            "app_name": app_name,
+            "model_name": model_name,
+            "field_name": field_name,
+            "uuid": uuid,
+            "timestamp": timestamp,
+        },
+    )
 
 
 def get_file_url(app_name, model_name, field_name, uuid):
@@ -142,9 +145,7 @@ def get_file_url(app_name, model_name, field_name, uuid):
     Returns:
         str: URL completa do arquivo
     """
-    return reverse('sealed_fields:serve_decrypted_file', kwargs={
-        'app_name': app_name,
-        'model_name': model_name,
-        'field_name': field_name,
-        'uuid': uuid
-    })
+    return reverse(
+        "sealed_fields:serve_decrypted_file",
+        kwargs={"app_name": app_name, "model_name": model_name, "field_name": field_name, "uuid": uuid},
+    )
