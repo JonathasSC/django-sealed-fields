@@ -106,6 +106,13 @@ Os valores são criptografados automaticamente antes de serem salvos no banco de
 - Todos os valores são gravados em colunas de texto. Datas com fuso horário são convertidas para UTC antes da criptografia.
 - Consultas por chave em `EncryptedJSONField` (`campo__chave=...`) não funcionam, pelo mesmo motivo dos filtros.
 
+### Arquivos e imagens
+
+- O conteúdo é criptografado ao salvar e descriptografado só quando o arquivo é lido (`read()`, `open()`, `chunks()`, `size`, dimensões da imagem). Consultas ao banco não acessam o storage.
+- O arquivo inteiro é mantido em memória ao criptografar e descriptografar. Ajuste `DATA_UPLOAD_MAX_MEMORY_SIZE` e evite arquivos muito grandes.
+- `url` e `path` apontam para o arquivo criptografado no storage. Para entregar o conteúdo ao navegador, use a view de [arquivos descriptografados](#servindo-arquivos-descriptografados).
+- Funciona com qualquer storage configurado no campo (`storage=...`), como S3.
+
 ### Servindo arquivos descriptografados
 
 Inclua as URLs do app `sealed_fields.serve` no `urls.py` do projeto:
@@ -171,6 +178,7 @@ Depois, rode `python manage.py makemigrations --check` para confirmar que nenhum
 Mudanças de comportamento em relação à versão original:
 
 - A view de arquivos exige login e permissão (veja [Servindo arquivos descriptografados](#servindo-arquivos-descriptografados)).
+- Campos de arquivo retornam um `FieldFile` comum do Django (antes era um `ContentFile` já descriptografado) e só leem o storage quando o conteúdo é acessado. `values_list` retorna o caminho do arquivo.
 - `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` passaram a funcionar. Valores de `EncryptedUUIDField` gravados pela versão original ficaram em texto puro e não podem ser lidos.
 
 ## Desenvolvimento

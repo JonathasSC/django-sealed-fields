@@ -1,25 +1,72 @@
-import logging
 import os
-from io import BytesIO
 
 from django.core.files.base import ContentFile
 from django.db import models
-from PIL import Image
+from django.db.models.fields.files import FieldFile, ImageFieldFile
 
 from .file_mixin import EncryptedFileMixin
 
 __all__ = ["EncryptedFileField", "EncryptedImageField"]
 
-logger = logging.getLogger(__name__)
+
+class EncryptedFieldFileMixin:
+    """
+    Arquivo cujo conteúdo é criptografado ao ser gravado no storage e descriptografado
+    somente quando é lido. Carregar a instância do banco não acessa o storage.
+    """
+
+    def _get_file(self):
+        self._require_file()
+        if getattr(self, "_file", None) is None:
+            with self.storage.open(self.name, "rb") as encrypted_file:
+                content = self.field.cryptographer.decrypted(encrypted_file.read())
+            self._file = ContentFile(content, name=self.name)
+        return self._file
+
+    file = property(_get_file, FieldFile._set_file, FieldFile._del_file)
+
+    @property
+    def size(self):
+        # O storage guarda o conteúdo criptografado, que é maior; o tamanho real exige descriptografar
+        self._require_file()
+        return self.file.size
+
+    def open(self, mode="rb"):
+        self._require_file()
+        self.file.open(mode)
+        return self
+
+    def save(self, name, content, save=True):
+        content.seek(0)
+        encrypted = ContentFile(self.field.cryptographer.encrypted(content.read()))
+
+        name = self.field.generate_filename(self.instance, os.path.basename(name))
+        self.name = self.storage.save(name, encrypted, max_length=self.field.max_length)
+
+        # A instância recebe o conteúdo original (o ImageField calcula as dimensões a partir dele)
+        if hasattr(self, "_set_instance_attribute"):
+            self._set_instance_attribute(self.name, content)
+        else:  # Django < 5.1
+            setattr(self.instance, self.field.attname, self.name)
+        self._committed = True
+
+        if save:
+            self.instance.save()
+
+    save.alters_data = True
+
+
+class EncryptedFieldFile(EncryptedFieldFileMixin, FieldFile):
+    pass
+
+
+class EncryptedImageFieldFile(EncryptedFieldFileMixin, ImageFieldFile):
+    pass
 
 
 class EncryptedFileFieldMixin:
     """
     Comportamento compartilhado pelos campos de arquivo criptografados.
-
-    O conteúdo é criptografado no `pre_save` e descriptografado no `from_db_value`.
-    O arquivo descriptografado carrega o caminho de origem no storage, o que permite
-    salvar a instância novamente sem recriptografar nem duplicar o arquivo.
     """
 
     def __init__(self, *args, **kwargs):
@@ -28,61 +75,10 @@ class EncryptedFileFieldMixin:
 
     def pre_save(self, model_instance, add):
         file = getattr(model_instance, self.attname)
-
-        if not file:
-            model_instance.__dict__[self.attname] = None
-            return super().pre_save(model_instance, add)
-
-        if file._committed:
-            # Arquivo já persistido (por exemplo, na segunda chamada de pre_save do Django 6).
-            return super().pre_save(model_instance, add)
-
-        source_name = getattr(getattr(file, "_file", None), "_sealed_source_name", None)
-        if source_name is not None:
-            # Valor carregado do banco e não alterado: mantém o arquivo já criptografado.
-            return source_name
-
-        if file.size == 0:
-            model_instance.__dict__[self.attname] = None
-            return super().pre_save(model_instance, add)
-
-        file.name = os.path.basename(file.name)
-        model_instance.__dict__[self.attname] = self._encrypt_file(file)
+        if file and not file._committed and file.size == 0:
+            # Arquivos vazios não são gravados, como na versão original
+            setattr(model_instance, self.attname, None)
         return super().pre_save(model_instance, add)
-
-    def _encrypt_file(self, file):
-        """
-        Criptografa o conteúdo do arquivo antes de ser salvo.
-        """
-        file.seek(0)
-        encrypted_content = self.cryptographer.encrypted(file.read())
-        return ContentFile(encrypted_content, name=file.name)
-
-    def from_db_value(self, value, expression, connection):
-        """
-        Descriptografa o arquivo ao ser carregado do banco de dados.
-        Se o valor for vazio, retorna None. Se o arquivo não existir no storage,
-        retorna o caminho sem descriptografar.
-        """
-        if not value:
-            return None
-
-        if not self.storage.exists(value):
-            logger.warning("Arquivo criptografado não encontrado no storage: %s", value)
-            return value
-
-        with self.storage.open(value, "rb") as encrypted_file:
-            decrypted_content = self.cryptographer.decrypted(encrypted_file.read())
-
-        self._validate_decrypted_content(decrypted_content)
-        decrypted_file = ContentFile(decrypted_content, name=value)
-        decrypted_file._sealed_source_name = value
-        return decrypted_file
-
-    def _validate_decrypted_content(self, content):
-        """
-        Sobrescreva para validar o conteúdo descriptografado.
-        """
 
 
 class EncryptedFileField(EncryptedFileFieldMixin, models.FileField):
@@ -90,14 +86,12 @@ class EncryptedFileField(EncryptedFileFieldMixin, models.FileField):
     Um campo de arquivo criptografado.
     """
 
+    attr_class = EncryptedFieldFile
+
 
 class EncryptedImageField(EncryptedFileFieldMixin, models.ImageField):
     """
     Um campo de imagem criptografado.
     """
 
-    def _validate_decrypted_content(self, content):
-        try:
-            Image.open(BytesIO(content)).verify()
-        except Exception as e:
-            raise ValueError(f"A decriptação falhou, o conteúdo não é uma imagem válida: {e}") from e
+    attr_class = EncryptedImageFieldFile
