@@ -18,34 +18,16 @@ Esta biblioteca utiliza o módulo `cryptography.fernet` para garantir a criptogr
 ## Requisitos
 
 - Python 3.10 ou superior
-- Django 4.2 ou superior
-- Biblioteca `cryptography`
-- Biblioteca `pillow`
-- Biblioteca `django`
+- Django 4.2, 5.2, 6.0 ou 6.1
+- `cryptography` e `pillow` (instaladas automaticamente)
 
 ## Instalação
 
-Para instalar a biblioteca, basta adicionar o pacote no seu projeto ou instalá-lo via `pip`.
-
-### Usando `pip`:
-
 ```bash
+uv add django-sealed-fields
+# ou
 pip install django-sealed-fields
 ```
-
-### Manualmente:
-
-1. Baixe o código fonte ou clone o repositório:
-   
-   ```bash
-   git clone https://github.com/JonathasSC/django-sealed-fields
-   ```
-
-2. Instale os requisitos:
-   
-   ```bash
-   pip install -r requirements.txt
-   ```
 
 ## Configuração
 
@@ -191,13 +173,29 @@ Mudanças de comportamento em relação à versão original:
 - A view de arquivos exige login e permissão (veja [Servindo arquivos descriptografados](#servindo-arquivos-descriptografados)).
 - `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` passaram a funcionar. Valores de `EncryptedUUIDField` gravados pela versão original ficaram em texto puro e não podem ser lidos.
 
-## Testes
+## Desenvolvimento
+
+O projeto usa [uv](https://docs.astral.sh/uv/) para gerenciar o ambiente e as dependências, e [Ruff](https://docs.astral.sh/ruff/) como linter.
 
 ```bash
-pip install -e .
-python runtests.py
+git clone https://github.com/JonathasSC/django-sealed-fields
+cd django-sealed-fields
+uv sync                           # cria o .venv com o pacote e as dependências de desenvolvimento
+
+uv run python runtests.py         # testes
+uv run ruff check .               # lint
+uv run ruff check --fix .         # corrige automaticamente o que for possível
 ```
 
+Para testar com outra versão do Django ou do Python:
+
+```bash
+uv sync --python 3.13
+uv pip install "django~=6.1.0"
+uv run --no-sync python runtests.py
+```
+
+Ao alterar as dependências no `pyproject.toml`, rode `uv lock` e inclua o `uv.lock` no commit.
 
 ## Contribuição
 
@@ -205,9 +203,9 @@ Sinta-se à vontade para contribuir! Para sugestões ou melhorias, siga os segui
 
 1. Faça um fork deste repositório.
 2. Crie uma branch (`git checkout -b feature-nome-da-sua-feature`).
-3. Comite suas mudanças (`git commit -am 'Adicionando nova funcionalidade'`).
-4. Envie para o repositório remoto (`git push origin feature-nome-da-sua-feature`).
-5. Abra um Pull Request.
+3. Garanta que `uv run python runtests.py` e `uv run ruff check .` passam.
+4. Comite suas mudanças e envie a branch para o seu fork.
+5. Abra um Pull Request. O CI roda o lint, os testes em todas as versões suportadas do Django e o build do pacote.
 
 ## Licença
 

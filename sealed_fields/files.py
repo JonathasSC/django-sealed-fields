@@ -100,4 +100,4 @@ class EncryptedImageField(EncryptedFileFieldMixin, models.ImageField):
         try:
             Image.open(BytesIO(content)).verify()
         except Exception as e:
-            raise ValueError(f"A decriptação falhou, o conteúdo não é uma imagem válida: {e}")
+            raise ValueError(f"A decriptação falhou, o conteúdo não é uma imagem válida: {e}") from e

@@ -1,26 +1,27 @@
 import datetime
 import json
 
-from django.db import models
-from .field_mixin import EncryptedFieldMixin
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.utils.functional import cached_property
+from django.db import models
 from django.db.backends.base.operations import BaseDatabaseOperations
+from django.utils.functional import cached_property
+
+from .field_mixin import EncryptedFieldMixin
 
 __all__ = [
-    "EncryptedIntegerField",
-    "EncryptedFloatField",
     "EncryptedBooleanField",
     "EncryptedCharField",
-    "EncryptedTextField",
     "EncryptedDateField",
     "EncryptedDateTimeField",
-    "EncryptedTimeField",
     "EncryptedDecimalField",
     "EncryptedEmailField",
+    "EncryptedFloatField",
+    "EncryptedIntegerField",
+    "EncryptedJSONField",
+    "EncryptedTextField",
+    "EncryptedTimeField",
     "EncryptedURLField",
     "EncryptedUUIDField",
-    "EncryptedJSONField",
 ]
 
 
