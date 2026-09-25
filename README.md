@@ -14,6 +14,7 @@ Esta biblioteca utiliza o módulo `cryptography.fernet` para garantir a criptogr
 - Suporte a campos de arquivo (`FileField`) e imagens (`ImageField`) com criptografia.
 - Integração fácil com o ORM do Django, sem necessidade de alterações no modelo.
 - Segurança robusta utilizando o `cryptography.fernet`.
+- Troca de chave sem perder acesso aos dados antigos, com comando para recriptografar valores e arquivos.
 
 ## Requisitos
 
@@ -49,16 +50,17 @@ pip install django-sealed-fields
 
    **Importante**: A chave de criptografia deve ser mantida em segredo. Use uma chave única para o seu projeto e não compartilhe publicamente.
 
-2. **Adicione o app `sealed_fields.serve` à lista de apps instalados** (necessário apenas para servir arquivos descriptografados):
-
-   No arquivo `settings.py`, adicione o app à lista `INSTALLED_APPS`:
+2. **Adicione os apps ao `INSTALLED_APPS`** (opcional):
 
    ```python
    INSTALLED_APPS = [
        # outros apps
-       'sealed_fields.serve',
+       'sealed_fields',        # comando rotate_encryption_key
+       'sealed_fields.serve',  # view que serve arquivos descriptografados
    ]
    ```
+
+   Os campos funcionam sem nenhum dos dois; adicione apenas o que for usar.
 
 ## Uso
 
@@ -150,6 +152,32 @@ url = get_file_url_with_timestamp("meuapp", "MeuModelo", "campo_imagem", obj.uui
 <img src="{% url 'sealed_fields:serve_decrypted_file' app_name='meuapp' model_name='MeuModelo' field_name='campo_imagem' uuid=obj.uuid %}">
 ```
 
+## Troca de chave (rotação)
+
+`ENCRYPTION_KEY` aceita uma lista de chaves. A primeira é usada para criptografar novos valores, e todas são aceitas para descriptografar:
+
+1. Gere uma chave nova e coloque-a **na frente** da atual:
+
+   ```python
+   ENCRYPTION_KEY = [os.environ["ENCRYPTION_KEY_NOVA"], os.environ["ENCRYPTION_KEY_ANTIGA"]]
+   ```
+
+   A partir daqui, dados novos usam a chave nova e os antigos continuam legíveis.
+
+2. Recriptografe os dados existentes com a chave nova (requer `sealed_fields` no `INSTALLED_APPS`):
+
+   ```bash
+   python manage.py rotate_encryption_key --dry-run   # mostra o que seria alterado
+   python manage.py rotate_encryption_key             # todos os modelos
+   python manage.py rotate_encryption_key meuapp meuapp2.MeuModelo   # apenas alguns
+   ```
+
+   Valores que já usam a chave nova são ignorados, então o comando pode ser interrompido e executado de novo. Arquivos são regravados antes de a versão antiga ser apagada; em storages que não sobrescrevem, o arquivo recebe um nome novo e o banco é atualizado.
+
+3. Depois que o comando terminar sem pendências, remova a chave antiga do `ENCRYPTION_KEY`.
+
+Faça backup do banco e dos arquivos antes de rotacionar.
+
 ## Migrando do `django-encrypted-fields-and-files`
 
 Os dados já gravados continuam compatíveis (mesma chave `ENCRYPTION_KEY` e mesmo formato), mas os nomes de import mudaram:
@@ -177,6 +205,7 @@ Depois, rode `python manage.py makemigrations --check` para confirmar que nenhum
 
 Mudanças de comportamento em relação à versão original:
 
+- Chave ausente ou inválida gera `ImproperlyConfigured` ao usar um campo (antes era `ValueError` ao importar os models).
 - A view de arquivos exige login e permissão (veja [Servindo arquivos descriptografados](#servindo-arquivos-descriptografados)).
 - Campos de arquivo retornam um `FieldFile` comum do Django (antes era um `ContentFile` já descriptografado) e só leem o storage quando o conteúdo é acessado. `values_list` retorna o caminho do arquivo.
 - `EncryptedDateTimeField`, `EncryptedTimeField`, `EncryptedDecimalField`, `EncryptedUUIDField` e `EncryptedJSONField` passaram a funcionar. Valores de `EncryptedUUIDField` gravados pela versão original ficaram em texto puro e não podem ser lidos.

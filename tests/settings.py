@@ -10,6 +10,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "sealed_fields",
     "sealed_fields.serve",
     "tests",
 ]

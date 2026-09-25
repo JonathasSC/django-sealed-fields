@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.files.storage import FileSystemStorage
 from django.db import models
 
 from sealed_fields import (
@@ -53,3 +54,18 @@ class Photo(models.Model):
     image = EncryptedImageField(upload_to="photos/", width_field="width", height_field="height")
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
+
+
+class OverwriteStorage(FileSystemStorage):
+    """
+    Storage que sobrescreve arquivos existentes, como o S3 com file_overwrite=True.
+    """
+
+    def get_available_name(self, name, max_length=None):
+        if self.exists(name):
+            self.delete(name)
+        return name
+
+
+class OverwriteDocument(models.Model):
+    file = EncryptedFileField(upload_to="overwrite/", storage=OverwriteStorage())
