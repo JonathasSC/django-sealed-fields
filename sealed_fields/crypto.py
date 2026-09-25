@@ -27,8 +27,7 @@ def _build_cipher(keys):
         return MultiFernet([Fernet(key) for key in keys])
     except (ValueError, TypeError) as e:
         raise ImproperlyConfigured(
-            "ENCRYPTION_KEY contém uma chave Fernet inválida. Gere uma com "
-            "Fernet.generate_key()."
+            "ENCRYPTION_KEY contém uma chave Fernet inválida. Gere uma com Fernet.generate_key()."
         ) from e
 
 

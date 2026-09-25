@@ -27,8 +27,11 @@ jobs:
       - name: Conferir se o uv.lock está atualizado
         run: uv lock --check
 
-      - name: Ruff
+      - name: Ruff (lint)
         run: uv run ruff check --output-format=github .
+
+      - name: Ruff (formatação)
+        run: uv run ruff format --check --diff .
 
   tests:
     name: Django ${{ matrix.django }} / Python ${{ matrix.python }}

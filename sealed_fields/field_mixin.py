@@ -10,6 +10,7 @@ class EncryptedFieldMixin:
     coluna de texto. Na leitura, o texto descriptografado é convertido de volta por
     `cast_value`, que por padrão usa o to_python do campo original.
     """
+
     @property
     def cipher(self):
         return get_cipher()
