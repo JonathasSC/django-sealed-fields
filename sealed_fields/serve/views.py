@@ -52,10 +52,8 @@ def serve_decrypted_file(request, app_name, model_name, field_name, uuid, timest
     if not isinstance(field, models.FileField):
         return HttpResponse("Campo não encontrado.", status=404)
 
-    # Adia os campos de arquivo para descriptografar apenas o solicitado, e só se não houver cache
-    file_fields = [f.name for f in model._meta.concrete_fields if isinstance(f, models.FileField)]
     try:
-        obj = model._default_manager.defer(*file_fields).filter(uuid=uuid).first()
+        obj = model._default_manager.filter(uuid=uuid).first()
     except (FieldError, ValidationError, ValueError):
         obj = None
     if not obj:

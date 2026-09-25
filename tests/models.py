@@ -47,3 +47,9 @@ class Document(models.Model):
 
 class WithoutUUID(models.Model):
     file = EncryptedFileField(upload_to="docs/", null=True, blank=True)
+
+
+class Photo(models.Model):
+    image = EncryptedImageField(upload_to="photos/", width_field="width", height_field="height")
+    width = models.PositiveIntegerField(null=True)
+    height = models.PositiveIntegerField(null=True)

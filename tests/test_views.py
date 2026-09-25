@@ -100,8 +100,8 @@ class ServeDecryptedFileTests(MediaRootMixin, TestCase):
     def test_response_is_cached(self):
         self.client.force_login(self.viewer)
         self.client.get(self.url())
-        with mock.patch("sealed_fields.files.EncryptedFileFieldMixin.from_db_value") as from_db:
-            from_db.side_effect = AssertionError("não deveria descriptografar de novo")
+        with mock.patch("sealed_fields.file_mixin.EncryptedFileMixin.decrypted") as decrypted:
+            decrypted.side_effect = AssertionError("não deveria descriptografar de novo")
             response = self.client.get(self.url())
         self.assertEqual(response.content, b"conteudo secreto")
 

@@ -2,6 +2,7 @@ import io
 import os
 import shutil
 import tempfile
+from unittest import mock
 
 from cryptography.fernet import Fernet
 from django.conf import settings
@@ -12,7 +13,7 @@ from django.db import connection
 from django.test import TestCase, override_settings
 from PIL import Image
 
-from .models import Document
+from .models import Document, Photo
 
 
 def png_bytes(color="red"):
@@ -121,15 +122,54 @@ class EncryptedFileFieldTests(MediaRootMixin, TestCase):
     def test_missing_file_does_not_break_queries(self):
         Document.objects.create(file=ContentFile(b"x", name="a.txt"))
         default_storage.delete("docs/a.txt")
-        with self.assertLogs("sealed_fields.files", "WARNING"):
-            documents = list(Document.objects.all())
+        documents = list(Document.objects.all())
         self.assertEqual(documents[0].file.name, "docs/a.txt")
+        with self.assertRaises(FileNotFoundError):
+            documents[0].file.read()
 
-    def test_deferred_field_is_not_read_from_storage(self):
-        Document.objects.create(file=ContentFile(b"x", name="a.txt"))
-        default_storage.delete("docs/a.txt")
-        with self.assertNoLogs("sealed_fields.files", "WARNING"):
-            list(Document.objects.defer("file"))
+    def test_loading_does_not_read_storage(self):
+        Document.objects.create(file=ContentFile(b"x", name="a.txt"), image=ContentFile(png_bytes(), name="f.png"))
+        with mock.patch.object(default_storage, "open", side_effect=AssertionError("leu o storage")):
+            documents = list(Document.objects.all())
+            self.assertEqual(Document.objects.values_list("file", flat=True).get(), "docs/a.txt")
+        self.assertEqual(documents[0].file.read(), b"x")
+
+    def test_content_available_right_after_create(self):
+        obj = Document.objects.create(file=ContentFile(b"conteudo", name="a.txt"))
+        self.assertEqual(obj.file.read(), b"conteudo")
+
+    def test_open_as_context_manager_and_chunks(self):
+        obj = Document.objects.create(file=ContentFile(b"abc" * 1000, name="a.txt"))
+        loaded = Document.objects.get(pk=obj.pk)
+        with loaded.file.open("rb") as f:
+            self.assertEqual(b"".join(f.chunks(chunk_size=100)), b"abc" * 1000)
+        with loaded.file.open("rb") as f:
+            self.assertEqual(f.read(3), b"abc")
+
+    def test_save_through_field_file(self):
+        obj = Document.objects.create(title="x")
+        obj.file.save("novo.txt", ContentFile(b"via FieldFile.save"))
+        self.assertEqual(self.stored_name(obj, "file"), "docs/novo.txt")
+        self.assertNotIn(b"via FieldFile.save", self.raw_bytes("docs/novo.txt"))
+        self.assertEqual(Document.objects.get(pk=obj.pk).file.read(), b"via FieldFile.save")
+
+    def test_size_is_decrypted_size(self):
+        obj = Document.objects.create(file=ContentFile(b"x" * 1000, name="a.txt"))
+        self.assertEqual(Document.objects.get(pk=obj.pk).file.size, 1000)
+        self.assertGreater(default_storage.size("docs/a.txt"), 1000)
+
+    def test_text_content(self):
+        obj = Document.objects.create(file=ContentFile("texto com acentuação", name="a.txt"))
+        self.assertEqual(Document.objects.get(pk=obj.pk).file.read(), "texto com acentuação".encode())
+
+    def test_delete_removes_file_from_storage(self):
+        obj = Document.objects.create(file=ContentFile(b"x", name="a.txt"))
+        Document.objects.get(pk=obj.pk).file.delete(save=False)
+        self.assertEqual(self.files_in("docs"), [])
+
+    def test_url_points_to_stored_file(self):
+        obj = Document.objects.create(file=ContentFile(b"x", name="a.txt"))
+        self.assertTrue(Document.objects.get(pk=obj.pk).file.url.endswith("docs/a.txt"))
 
 
 class EncryptedImageFieldTests(MediaRootMixin, TestCase):
@@ -146,11 +186,21 @@ class EncryptedImageFieldTests(MediaRootMixin, TestCase):
         loaded.save()
         self.assertEqual(self.files_in("imgs"), ["foto.png"])
 
-    def test_invalid_image_content_raises(self):
-        name = default_storage.save(
-            "imgs/falsa.png", ContentFile(Fernet(settings.ENCRYPTION_KEY).encrypt(b"nao e imagem"))
-        )
+    def test_image_dimensions_use_decrypted_content(self):
+        buffer = io.BytesIO()
+        Image.new("RGB", (7, 3)).save(buffer, "PNG")
+        photo = Photo.objects.create(image=ContentFile(buffer.getvalue(), name="p.png"))
+        self.assertEqual((photo.width, photo.height), (7, 3))
+        loaded = Photo.objects.get(pk=photo.pk)
+        self.assertEqual((loaded.width, loaded.height), (7, 3))
+        self.assertEqual((loaded.image.width, loaded.image.height), (7, 3))
+
+    def test_existing_encrypted_file_is_readable(self):
+        """
+        Arquivos gravados pela versão anterior (mesmo formato Fernet) continuam legíveis.
+        """
+        content = png_bytes("blue")
+        name = default_storage.save("imgs/antiga.png", ContentFile(Fernet(settings.ENCRYPTION_KEY).encrypt(content)))
         Document.objects.bulk_create([Document(title="x")])
         Document.objects.update(image=name)
-        with self.assertRaisesMessage(ValueError, "não é uma imagem válida"):
-            Document.objects.get()
+        self.assertEqual(Document.objects.get().image.read(), content)
