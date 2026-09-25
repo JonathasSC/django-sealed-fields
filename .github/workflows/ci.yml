@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # Reutilizado pelo workflow de release para testar o commit publicado
+  workflow_call:
 
 permissions:
   contents: read

@@ -46,6 +46,7 @@ dependencies = [
 Homepage = "https://github.com/JonathasSC/django-sealed-fields"
 Repository = "https://github.com/JonathasSC/django-sealed-fields"
 "Issue Tracker" = "https://github.com/JonathasSC/django-sealed-fields/issues"
+Changelog = "https://github.com/JonathasSC/django-sealed-fields/blob/main/CHANGELOG.md"
 "Upstream" = "https://github.com/D3NKYT0/django-encrypted-fields"
 
 [dependency-groups]
